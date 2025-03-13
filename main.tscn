@@ -1,8 +1,67 @@
-[gd_scene load_steps=12 format=3 uid="uid://buy87j1duaubj"]
+[gd_scene load_steps=18 format=3 uid="uid://buy87j1duaubj"]
 
 [ext_resource type="Script" uid="uid://s3nkuve8qnbs" path="res://main.gd" id="1_ig7tw"]
 [ext_resource type="Texture2D" uid="uid://csjck1wjt8d4b" path="res://logo.webp" id="2_0xm2m"]
 [ext_resource type="AudioStream" uid="uid://uug1xl833fbt" path="res://blipSelect.wav" id="2_h2yge"]
+
+[sub_resource type="Shader" id="Shader_h2yge"]
+code = "shader_type canvas_item;
+
+uniform vec3 color: source_color;
+uniform float lineWidth : hint_range(0.0, 100.0, 0.01);
+uniform vec2 size;
+uniform sampler2D noise: filter_nearest;
+uniform sampler2D noise2: filter_nearest;
+uniform float edge_fade : hint_range(0.0, 1.0, 0.1);
+uniform float wave_speed: hint_range(0.0, 10.0, 0.1);
+uniform float opacity: hint_range(0.0, 1, 0.001);
+
+void fragment() {
+	
+	float n = texture(noise,mod(UV+-TIME*wave_speed/21.2,1.0)).r;
+	float n2 = texture(noise2,mod(UV+14.7+TIME*wave_speed/40.3,1.0)).r;;
+	float n3 = clamp(0.0,0.3+pow(n+(n2*0.4),3.0)*1.5,1.0);
+	COLOR.rgb = color + vec3(n3);
+	
+	vec2 m = 1.0-(edge_fade*abs(UV-0.5)*2.0*size-size+1.0+lineWidth/50.0);
+	float ma = min(m.x,m.y);
+	
+	float uvx = mod(UV.x-((n3-0.5)/100.0)-(mod(size.x,2)/2.0+0.5),1.0/size.x)*size.x;
+	float uvy = mod(UV.y-((n3-0.5)/100.0)-(mod(size.y,2)/2.0+0.5),1.0/size.y)*size.y;
+	vec2 uv = vec2(uvx,uvy);
+	vec2 w = size*max(n3,0.5)*lineWidth/1000.0;
+	if(((uv.x>=w.x)&&(uv.x<=1.0-w.x))&&((uv.y>=w.y)&&(uv.y<=1.0-w.y))){
+		discard;
+	}
+	COLOR.a = ma*n3 * opacity;
+}"
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_1bvp3"]
+seed = 365
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_lquwl"]
+seamless = true
+seamless_blend_skirt = 1.0
+noise = SubResource("FastNoiseLite_1bvp3")
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_7mycd"]
+seed = 440
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_272bh"]
+seamless = true
+seamless_blend_skirt = 1.0
+noise = SubResource("FastNoiseLite_7mycd")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_5vw27"]
+shader = SubResource("Shader_h2yge")
+shader_parameter/color = Color(0.281187, 0.281187, 0.281187, 1)
+shader_parameter/lineWidth = 0.86
+shader_parameter/size = Vector2(128, 128)
+shader_parameter/noise = SubResource("NoiseTexture2D_lquwl")
+shader_parameter/noise2 = SubResource("NoiseTexture2D_272bh")
+shader_parameter/edge_fade = 1.0
+shader_parameter/wave_speed = 1.7
+shader_parameter/opacity = 0.015
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_0xm2m"]
 bg_color = Color(0.26, 0.26, 0.26, 0.375)
@@ -105,7 +164,18 @@ unique_name_in_owner = true
 stream = ExtResource("2_h2yge")
 bus = &"Sounds"
 
-[node name="ColorRect" type="ColorRect" parent="."]
+[node name="BGShader" type="ColorRect" parent="."]
+material = SubResource("ShaderMaterial_5vw27")
+layout_mode = 2
+anchor_left = 0.0138889
+anchor_top = 0.0246914
+anchor_right = 0.986111
+anchor_bottom = 0.975309
+grow_horizontal = 2
+grow_vertical = 2
+metadata/_edit_use_anchors_ = true
+
+[node name="BGColor" type="ColorRect" parent="."]
 z_index = -1
 layout_mode = 1
 anchors_preset = 15
@@ -115,7 +185,7 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.555775, 0.615499, 0.765412, 1)
 
-[node name="MarginContainer" type="MarginContainer" parent="ColorRect"]
+[node name="MarginContainer" type="MarginContainer" parent="BGColor"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -127,7 +197,7 @@ theme_override_constants/margin_top = 128
 theme_override_constants/margin_right = 128
 theme_override_constants/margin_bottom = 128
 
-[node name="TextureRect" type="TextureRect" parent="ColorRect/MarginContainer"]
+[node name="BGImage" type="TextureRect" parent="BGColor/MarginContainer"]
 layout_mode = 2
 texture = ExtResource("2_0xm2m")
 expand_mode = 5

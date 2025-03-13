@@ -5,12 +5,13 @@ var generated_number: int = 0
 var num_range_min: int = 0
 var num_range_max: int = 0
 
-var alunni_esclusi: PackedStringArray = [
+## Alunni esclusi perchè già chiamati, assenti o per altri motivi
+@export var alunni_esclusi: PackedStringArray = [
 	"Mattia Colonna",
-	"Giovanna Denicolò"
 ]
 
-var alunni: PackedStringArray = [
+## Tutti gli alunni di una classe
+@export var alunni: PackedStringArray = [
 	"Giandomenico Antonicelli",
 	"Alessia Barbanente",
 	"Nunzio Bongallino",
@@ -37,7 +38,7 @@ func _input(event: InputEvent) -> void:
 		if DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_WINDOWED or DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_MAXIMIZED:
 			DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
 		else:
-			DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_MAXIMIZED)
+			DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
 
 func generate() -> void:
 	#num_range_min = %minSpinBox.value
@@ -48,7 +49,16 @@ func generate() -> void:
 	if alunni_esclusi.has(alunni[generated_number]):
 		generate()
 	
-	%generatedNumberLabel.text = str(alunni[generated_number], "\n", "(", generated_number + 1, ")")
+	textAnim()
+	%generatedNumberLabel.text = str(alunni[generated_number], " ", "(", generated_number + 1, ")")
+
+func textAnim() -> void:
+	var tween: Tween = create_tween()
+	
+	tween.set_ease(Tween.EASE_IN_OUT)
+	tween.set_trans(Tween.TRANS_SINE)
+	
+	tween.tween_property(%generatedNumberLabel, "visible_ratio", 1.0, 0.25).from(0.0)
 
 
 func _on_min_spin_box_value_changed(value: int) -> void:
